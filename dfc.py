@@ -22,13 +22,67 @@ if opts.zone == None or opts.leftzonefile == None or opts.rightzonefile == None:
 lz = dns.zone.from_file(opts.leftzonefile, origin=opts.zone, relativize=False)
 rz = dns.zone.from_file(opts.rightzonefile, origin=opts.zone, relativize=False)
 
+count = 0
 matches = 0
 mismatches = 0
+foundedNames=[]
 
 for (name, rdataset) in lz.iterate_rdatasets():
+	#print(name, rdataset.rdtype, rdataset.rdclass, sep=", ")
 	match = False
 	result = None
 	
-#	ans = rz.get_rdataset(name, rdataset.rdtype)
+	ans = rz.get_rdataset(name, rdataset.rdtype)
+	if ans != None:
+		foundedNames.append(name)
+	
+	result = ans
+	if result == rdataset:
+		match = True
+	
+	count += 1
+	if match:
+		matches += 1
+	else:
+		mismatches += 1
+		print(">>>>>>>>>>>>>>>>>>")
+		print("(%s) query: %s ..." % ("MIS-MATCH", name))
+		print("Expected: ", rdataset)
+		print("Received: ", result)
+		
+for (name, rdataset) in rz.iterate_rdatasets():
+	if name in foundedNames:
+		continue
 
-	print(name, rdataset.rdtype, rdataset.rdclass, sep=", ")
+	#print(name, rdataset.rdtype, rdataset.rdclass, sep=", ")
+	match = False
+	result = None
+	
+	ans = lz.get_rdataset(name, rdataset.rdtype)
+	if ans != None:
+		foundedNames.append(name)
+	
+	result = ans
+	if result == rdataset:
+		match = True
+	
+	count += 1
+	if match:
+		matches += 1
+	else:
+		mismatches += 1
+		print("<<<<<<<<<<<<<<<<<<")
+		print("(%s) query: %s ..." % ("MIS-MATCH", name))
+		print("Expected: ", rdataset)
+		print("Received: ", result)
+
+		
+		
+print("done")
+
+print("\nResults:")
+print("Count:     ", count)
+print("Matches:     ", matches)
+print("Mis-matches: ", mismatches)
+
+	
